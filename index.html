@@ -50,6 +50,7 @@ label.opt{display:block;padding:3px 0;cursor:pointer}
 select,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
 textarea{width:100%;min-height:110px}
 .msg{color:var(--warn);margin:8px 0;min-height:1.4em}
+.note{border-radius:6px;padding:10px 14px;margin-bottom:16px;background:var(--accent-soft);font-size:.92rem}
 ul.clean{margin:6px 0;padding-left:20px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:640px){.grid2{grid-template-columns:1fr}.bar{width:120px}}
@@ -69,7 +70,7 @@ svg text{fill:var(--muted);font-size:10px}
   </div>
 </header>
 <main id="app" tabindex="-1"></main>
-<footer>Built for the Agile Delivery AI Lab. All scenarios are fictional. Your data stays in this browser; the app makes no network requests.</footer>
+<footer>Built for the Agile Delivery AI Lab. Sample scenarios are fictional. Use approved AI tools and follow your organisation's AI policy. Your data stays in this browser; the app makes no network requests.</footer>
 
 <script>
 (function(){
@@ -79,7 +80,7 @@ var DAY = 864e5;
 
 var COMPS = [
   {id:'prompt', name:'Prompting fundamentals', desc:'Structuring requests, supplying context, iterating on output.'},
-  {id:'resp',   name:'Responsible AI use',     desc:'Protecting confidential data and verifying what the AI produces.'},
+  {id:'resp',   name:'Responsible AI use',     desc:'Applying your organisation\'s AI policy and verifying what the AI produces.'},
   {id:'report', name:'Stakeholder reporting',  desc:'Drafting and tailoring updates without distorting the facts.'},
   {id:'risk',   name:'Risk and dependency management', desc:'Turning raw notes into registers and surfacing missing dependencies.'},
   {id:'retro',  name:'Retrospectives and facilitation', desc:'Designing sessions and making sense of team input.'},
@@ -105,11 +106,11 @@ var EX = [
   task:'Ask the AI to critique the draft against criteria you choose, then to rewrite it using only the facts above.',
   template:'Here is a draft status update: [paste the weak draft].\nCritique it against these criteria: specificity, honesty about blockers, clear next steps, appropriate length. List the weaknesses first.\nThen rewrite it using only these facts: [facts].',
   checks:['Were the critique criteria yours, not the AI\'s defaults?','Did the rewrite add anything not in the facts?','Would you send it unedited? Why or why not?']},
- {id:'e3', comp:'resp', title:'Anonymise before you prompt', minutes:15,
-  scenario:'Raw note (fictional): "Call with Marcus Hale at Brightwater Bank on 4 March. Their Head of Compliance, Priya Nair, is unhappy about the £2.3m change request and may escalate to the CEO. Our contract with them renews in June."',
-  task:'Rewrite the note by hand so that it could be shared with an AI tool without exposing people, organisations, amounts or dates that identify the matter. Then ask the AI to work only on your anonymised version.',
-  template:'Summarise this note in three bullets and suggest one next action: [your anonymised note]',
-  checks:['Could a reader identify the client, the individuals or the contract value?','Have you checked your organisation\'s policy on AI tools before using real material?','Which detail was hardest to remove, and why?']},
+ {id:'e3', comp:'resp', title:'Apply your AI policy to real material', minutes:15,
+  scenario:'Sample note (fictional): "Call with Marcus Hale at Brightwater Bank on 4 March. Their Head of Compliance, Priya Nair, is unhappy about the £2.3m change request and may escalate to the CEO. Our contract with them renews in June." Treat it as if it were a real note from your own work.',
+  task:'Before using any AI tool, classify each detail in the note (people, client, amount, dates, relationship risk) against your organisation\'s AI policy: which details are permitted in which approved tool, and which need generalising or approval first. Then ask the AI to work on the version your policy allows.',
+  template:'Summarise this note in three bullets and suggest one next action: [the note, in the form your policy permits for this tool]',
+  checks:['Can you name the approved tool and the policy rule that permits this use?','Which details, if any, would you still generalise even though the policy allows them, and why?','Where would you check if the policy did not clearly cover this case?']},
  {id:'e4', comp:'resp', title:'Verify what the AI tells you', minutes:15,
   scenario:'Velocity for the last four sprints (fictional): 21, 24, 18 and 26 story points.',
   task:'Ask the AI for the average velocity and a one-sentence trend. Check the arithmetic yourself, and judge whether four data points justify the trend claim.',
@@ -332,12 +333,12 @@ function vPractice(){
     h += '<p><button class="btn secondary" data-act="back">Back to all exercises</button></p>' +
       '<div class="card"><p><span class="pill">'+esc(c.name)+'</span><span class="muted small">'+ex.minutes+' minutes</span></p>' +
       '<h2>'+esc(ex.title)+'</h2>' +
-      '<div class="banner" role="note">Use only the fictional scenario below. Do not paste confidential client or company information into any AI tool, and follow your organisation\'s AI policy.</div>' +
-      '<h3>Scenario</h3><p>'+esc(ex.scenario)+'</p>' +
+      '<div class="note" role="note">Use only AI tools approved by your organisation, within your secure corporate network. You may replace the sample scenario with comparable material from your own work where your organisation\'s AI policy permits it. If your policy is stricter than an exercise assumes, follow your policy.</div>' +
+      '<h3>Sample scenario</h3><p>'+esc(ex.scenario)+'</p>' +
       '<h3>Your task</h3><p>'+esc(ex.task)+'</p>' +
       '<h3>Prompt template</h3><pre id="tpl">'+esc(ex.template)+'</pre><button class="btn secondary" data-act="copyTpl">Copy template</button> <span class="muted small" id="copymsg" role="status"></span>' +
       '<h3>Check the output</h3><ul class="clean">'+ex.checks.map(function(k){return '<li>'+esc(k)+'</li>';}).join('')+'</ul>' +
-      '<h3>Reflection</h3><label for="refl" class="small muted">What worked, what did not, and what would you do differently?</label>' +
+      '<h3>Reflection</h3><label for="refl" class="small muted">What worked, what did not, and what would you do differently? Reflections are stored in this browser only. Record what you learned about the technique rather than confidential business detail, particularly if you may share your log.</label>' +
       '<textarea id="refl"></textarea>' +
       '<p><label>Your level for this competency now <select id="newlevel">';
     for(var i=1;i<=4;i++) h += '<option value="'+i+'"'+(S.levels[ex.comp]===i?' selected':'')+'>'+i+'. '+LEVELS[i-1]+'</option>';
@@ -381,13 +382,14 @@ function vLog(){
 function vAbout(){
   var h = banners() + '<div class="card"><h2>About this tool</h2>' +
     '<p>The navigator helps delivery managers build practical AI skills through short exercises on the artefacts they handle every day: status updates, risk registers, retrospectives, plans and metrics.</p>' +
+    '<h3>Assumed context</h3><p>The navigator assumes you work in an organisation whose AI policy permits the use of business information with approved AI tools inside its secure corporate network. It is a learning aid for individual delivery managers and does not replace that policy. Where your policy is stricter than an exercise assumes, follow your policy.</p>' +
     '<h3>How recommendations are made</h3><ul class="clean">' +
     '<li>Responsible AI use comes first: until it reaches level 2, that competency is recommended before any other.</li>' +
     '<li>After that, the competency with the lowest level below its target is chosen.</li>' +
     '<li>Competencies practised in the last seven days are deferred, unless that would leave nothing to recommend.</li>' +
     '<li>Within a competency, an unfinished exercise is preferred; otherwise the one practised longest ago.</li></ul>' +
     '<h3>How the projection works</h3><p>Each assessment or reflection records your total score. Once there are at least three entries over at least two days, a least-squares line through those totals estimates when your targets will be met. It is a simple extrapolation of your own self-rated progress, not a machine-learned prediction, and it is labelled as indicative.</p>' +
-    '<h3>Privacy and data</h3><p>Everything is stored in this browser only. The app makes no network requests and uses no accounts. Scenarios are fictional; never paste confidential material into AI tools.</p>' +
+    '<h3>Privacy and data</h3><p>Everything is stored in this browser only. The app makes no network requests and uses no accounts, so nothing you enter is sent anywhere by the app itself. Sample scenarios are fictional. The app does not use AI tools; the exercises are carried out in the AI tool your organisation provides.</p>' +
     '<h3>Reset</h3>';
   if(confirmReset){
     h += '<p>This permanently deletes your assessment, progress and reflections from this browser.</p><button class="btn" data-act="resetYes">Confirm reset</button> <button class="btn secondary" data-act="resetNo">Cancel</button>';
@@ -418,7 +420,7 @@ function sampleData(){
   s.targets = {prompt:3, resp:3, report:3, risk:3, retro:3, plan:3};
   [[-21,7],[-14,8],[-8,8],[-3,9],[0,9]].forEach(function(p){ s.history.push({t:now + p[0]*DAY, total:p[1]}); });
   s.log.push({t:now-14*DAY, ex:'e1', comp:'prompt', level:2, text:'Sample entry: adding the audience and format changed the draft considerably. The first attempt invented a delivery date.'});
-  s.log.push({t:now-8*DAY, ex:'e3', comp:'resp', level:2, text:'Sample entry: removing the contract value was straightforward; removing the individual\'s role was harder than expected.'});
+  s.log.push({t:now-8*DAY, ex:'e3', comp:'resp', level:2, text:'Sample entry: the policy permitted the summary in the approved tool, but I still generalised the individual\'s role.'});
   s.log.push({t:now-3*DAY, ex:'e9', comp:'retro', level:2, text:'Sample entry: the suggested format omitted any review of earlier actions, so I added a ten-minute segment for it.'});
   s.practised = {prompt:now-14*DAY, resp:now-8*DAY, retro:now-3*DAY};
   return s;
