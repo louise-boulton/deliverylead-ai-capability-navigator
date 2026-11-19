@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Capability Navigator for Delivery Managers</title>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#ffffff;--fg:#1c2330;--muted:#5b6575;--line:#d9dee6;
+  --accent:#1f5f8b;--accent-fg:#ffffff;--accent-soft:#e4eff7;--warn:#8a5a00;--warn-bg:#fff4dc;--ok:#1d6b43;
+  --seg:#e1e5eb;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12161c;--card:#1a2029;--fg:#e8ecf2;--muted:#9aa5b5;--line:#2c3541;
+  --accent:#6db3e3;--accent-fg:#0d1319;--accent-soft:#1d2d3b;--warn:#f0c36b;--warn-bg:#35290f;--ok:#7fd0a1;--seg:#2c3541;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px 0}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:1.25rem;margin:0 0 2px}
+.sub{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:8px 12px;font:inherit;color:var(--muted);cursor:pointer}
+nav button[aria-current="page"]{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+nav button:hover{color:var(--fg)}
+main{max-width:900px;margin:0 auto;padding:20px}
+h2{font-size:1.15rem;margin:0 0 8px}
+h3{font-size:1rem;margin:16px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:16px}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+button.btn,a.btn{display:inline-block;background:var(--accent);color:var(--accent-fg);border:0;border-radius:6px;padding:9px 16px;font:inherit;font-weight:600;cursor:pointer}
+button.btn.secondary{background:var(--accent-soft);color:var(--fg);border:1px solid var(--line);font-weight:500}
+button.btn:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.rname{display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;gap:4px;width:200px;flex:none}
+.seg{flex:1;height:14px;background:var(--seg);border-radius:3px;position:relative}
+.seg.on{background:var(--accent)}
+.seg.tgt::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;background:var(--fg);border-radius:2px}
+.banner{border-radius:6px;padding:10px 14px;margin-bottom:16px;background:var(--warn-bg);color:var(--warn);font-size:.92rem}
+.pill{display:inline-block;background:var(--accent-soft);border-radius:99px;padding:1px 10px;font-size:.8rem;margin-right:6px}
+pre{white-space:pre-wrap;word-wrap:break-word;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px;font:.88rem/1.5 ui-monospace,Menlo,Consolas,monospace;margin:6px 0}
+fieldset{border:1px solid var(--line);border-radius:6px;margin:0 0 12px;padding:10px 14px}
+legend{font-weight:600;padding:0 6px}
+label.opt{display:block;padding:3px 0;cursor:pointer}
+select,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+textarea{width:100%;min-height:110px}
+.msg{color:var(--warn);margin:8px 0;min-height:1.4em}
+ul.clean{margin:6px 0;padding-left:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}.bar{width:120px}}
+.tgtsel{margin-left:12px;font-size:.9rem}
+.logentry{border-bottom:1px solid var(--line);padding:10px 0}
+.logentry:last-child{border-bottom:0}
+footer{max-width:900px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:.85rem}
+svg text{fill:var(--muted);font-size:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>AI Capability Navigator</h1>
+    <p class="sub">Guided, self-paced AI practice for delivery managers</p>
+    <nav id="nav" aria-label="Sections"></nav>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<footer>Built for the Agile Delivery AI Lab. All scenarios are fictional. Your data stays in this browser; the app makes no network requests.</footer>
+
+<script>
+(function(){
+'use strict';
+
+var DAY = 864e5;
+
+var COMPS = [
+  {id:'prompt', name:'Prompting fundamentals', desc:'Structuring requests, supplying context, iterating on output.'},
+  {id:'resp',   name:'Responsible AI use',     desc:'Protecting confidential data and verifying what the AI produces.'},
+  {id:'report', name:'Stakeholder reporting',  desc:'Drafting and tailoring updates without distorting the facts.'},
+  {id:'risk',   name:'Risk and dependency management', desc:'Turning raw notes into registers and surfacing missing dependencies.'},
+  {id:'retro',  name:'Retrospectives and facilitation', desc:'Designing sessions and making sense of team input.'},
+  {id:'plan',   name:'Planning and metrics',   desc:'Interpreting delivery data and building plans with explicit assumptions.'}
+];
+
+var LEVELS = ['Aware','Practising','Confident','Teaching others'];
+var LEVEL_DESC = [
+  'I understand what this involves but have not yet applied AI to it.',
+  'I have tried it with guidance or on low-stakes work.',
+  'I apply it independently and check the output reliably.',
+  'I can coach peers and adapt the approach to new situations.'
+];
+
+var EX = [
+ {id:'e1', comp:'prompt', title:'Structure a prompt: role, context, task, format', minutes:15,
+  scenario:'Project Kestrel (fictional) is a customer-portal upgrade. Sprint 6 facts: 14 of 18 planned stories are done; two stories are blocked awaiting a third-party API sandbox; one defect was found in testing and fixed; team capacity was 90% because of a public holiday. The sponsor wants a status update.',
+  task:'Write a prompt that produces a first-draft status update you could send with light edits. Fill in the template, run it in your AI tool, then note what was missing.',
+  template:'Role: You are an experienced delivery manager writing for [audience].\nContext: [2-3 sentences of facts from the scenario].\nTask: Draft a [length] status update covering progress, blockers and next steps.\nConstraints: Use only the facts provided. Do not invent dates or figures. Flag anything you are unsure of.\nFormat: [headings / bullets / short paragraphs].',
+  checks:['Does the output use only the facts you supplied?','Did you state the audience and the format?','Which single missing instruction would most improve the result?']},
+ {id:'e2', comp:'prompt', title:'Critique first, then refine', minutes:15,
+  scenario:'A weak draft update (fictional): "Sprint went well. Most things done. Some blockers. Will update later." Facts available: 14 of 18 stories complete; two stories blocked on a third-party sandbox; one defect found and fixed.',
+  task:'Ask the AI to critique the draft against criteria you choose, then to rewrite it using only the facts above.',
+  template:'Here is a draft status update: [paste the weak draft].\nCritique it against these criteria: specificity, honesty about blockers, clear next steps, appropriate length. List the weaknesses first.\nThen rewrite it using only these facts: [facts].',
+  checks:['Were the critique criteria yours, not the AI\'s defaults?','Did the rewrite add anything not in the facts?','Would you send it unedited? Why or why not?']},
+ {id:'e3', comp:'resp', title:'Anonymise before you prompt', minutes:15,
+  scenario:'Raw note (fictional): "Call with Marcus Hale at Brightwater Bank on 4 March. Their Head of Compliance, Priya Nair, is unhappy about the £2.3m change request and may escalate to the CEO. Our contract with them renews in June."',
+  task:'Rewrite the note by hand so that it could be shared with an AI tool without exposing people, organisations, amounts or dates that identify the matter. Then ask the AI to work only on your anonymised version.',
+  template:'Summarise this note in three bullets and suggest one next action: [your anonymised note]',
+  checks:['Could a reader identify the client, the individuals or the contract value?','Have you checked your organisation\'s policy on AI tools before using real material?','Which detail was hardest to remove, and why?']},
+ {id:'e4', comp:'resp', title:'Verify what the AI tells you', minutes:15,
+  scenario:'Velocity for the last four sprints (fictional): 21, 24, 18 and 26 story points.',
+  task:'Ask the AI for the average velocity and a one-sentence trend. Check the arithmetic yourself, and judge whether four data points justify the trend claim.',
+  template:'Here are four sprint velocities: [21, 24, 18, 26]. Calculate the mean, state your method, and describe the trend. State how confident the conclusion is given the sample size.',
+  checks:['The mean is 22.25. Did the AI\'s figure and method agree?','Did it claim a trend the data cannot support?','What is your standard step for verifying AI-produced numbers?']},
+ {id:'e5', comp:'report', title:'Tailor one update to three audiences', minutes:20,
+  scenario:'Project Kestrel (fictional): release 2 of 3 is delivered. A vendor API delay of 8 working days affects release 3. Budget is 4% under forecast. The team is at normal capacity.',
+  task:'Produce three versions of one update: for an executive sponsor, for the delivery team and for a customer support lead.',
+  template:'Using only the facts below, write three versions of one update, for (1) an executive sponsor, (2) the delivery team, (3) a customer support lead. For each, state what that audience needs to decide or do.\nFacts: [facts].',
+  checks:['Is the vendor delay present and equally clear in all three versions?','Does each version say what the reader should do?','Which version would you change most before sending?']},
+ {id:'e6', comp:'report', title:'Check for softened or inflated messages', minutes:15,
+  scenario:'Use the same Project Kestrel facts: release 2 of 3 delivered; vendor API delay of 8 working days affecting release 3; budget 4% under forecast.',
+  task:'Ask the AI to make the sponsor update more positive. Compare the result with the facts and identify any softening or overstatement.',
+  template:'Rewrite this update in a more positive tone without changing any facts: [your sponsor update]',
+  checks:['Did the delay become "minor" or "small" without evidence?','Is any statement now untrue or unsupported?','How would you word your instruction to prevent this?']},
+ {id:'e7', comp:'risk', title:'Risk register from raw notes', minutes:20,
+  scenario:'Workshop notes (fictional): "Vendor says the API might slip again. Only one person knows the legacy billing module. The test environment is shared with another programme and was down twice last month. The business wants go-live before the holiday freeze. Data migration scripts are untested at volume."',
+  task:'Turn the notes into a structured risk register and identify which ratings are assumptions.',
+  template:'From these notes, produce a risk register table with columns: risk statement (cause, event, impact), likelihood (L/M/H), impact (L/M/H), suggested owner role, first mitigation action. Mark any value you had to assume.\nNotes: [notes].',
+  checks:['Are risks written as cause, event and impact?','Which ratings must the team confirm rather than accept?','Did the AI add risks the notes do not support?']},
+ {id:'e8', comp:'risk', title:'Challenge your dependency map', minutes:15,
+  scenario:'Release 3 of Kestrel (fictional) depends on: the vendor API sandbox, the data migration, a security review slot and support team training. The only known date is a go-live target of week 12.',
+  task:'Ask the AI to find missing dependencies and hidden assumptions, then judge which suggestions are credible.',
+  template:'List the dependencies in this description, then list assumptions I appear to be making and any dependencies I may have missed. Rank the missing dependencies by how likely they are to matter.\nDescription: [description].',
+  checks:['Which suggested dependencies are credible for your own context?','Which did you reject, and on what basis?','What question would you now put to the team?']},
+ {id:'e9', comp:'retro', title:'Design a retrospective for a specific problem', minutes:20,
+  scenario:'A fictional team of five, working remotely, repeatedly carries over a quarter or more of its planned work. Retrospective actions are agreed but rarely completed. You have 60 minutes.',
+  task:'Ask the AI for a 60-minute format, then adapt it to the team.',
+  template:'Design a 60-minute remote retrospective for a team of five that repeatedly carries over work and does not complete retrospective actions. Include timings, a facilitation prompt for each segment, and a method for choosing at most two actions with owners.\nTeam context: [context].',
+  checks:['Does any segment examine why earlier actions failed?','Is the format realistic within 60 minutes?','What would you change given what you know about your own teams?']},
+ {id:'e10', comp:'retro', title:'Theme raw retrospective notes', minutes:20,
+  scenario:'Twelve fictional notes: requirements changed mid-sprint; unclear acceptance criteria; test environment unavailable; too many meetings; stories too large; waiting for design sign-off; late discovery of dependencies; same defects keep returning; hard to get a quick product decision; handover notes missing; environment bookings clash; estimates are optimistic.',
+  task:'Ask the AI to group the notes into themes and to label each as a root cause or a symptom, then challenge its labels.',
+  template:'Group these retrospective notes into themes. For each theme, say whether it looks like a root cause or a symptom and explain why.\nNotes: [notes].',
+  checks:['Does any theme merge items that belong apart?','Which "root cause" labels would you challenge?','What would the team need to confirm before acting?']},
+ {id:'e11', comp:'plan', title:'Interpret delivery metrics critically', minutes:15,
+  scenario:'Cycle times in days for eight completed items (fictional): 3, 5, 4, 12, 6, 4, 5, 9.',
+  task:'Ask for the median and mean and for what can responsibly be forecast from eight items. Compare against your own calculation.',
+  template:'Using these cycle times, give the median and mean, then say what you can and cannot responsibly forecast from eight items.\nData: [data].',
+  checks:['The median is 5 and the mean is 6. Did the AI agree?','Did it overstate the certainty of any forecast?','What additional data would you request?']},
+ {id:'e12', comp:'plan', title:'Build a plan with explicit assumptions', minutes:20,
+  scenario:'Fictional backlog: Epic A Login, about 8 points; Epic B Account dashboard, about 21; Epic C Notifications, about 13; Epic D Reporting, about 34. Velocity range is 20 to 26 points per sprint. There are two sprints before a fixed date.',
+  task:'Ask the AI for a release plan, and check whether it shows what does not fit.',
+  template:'Given this backlog and velocity range, propose a release plan for two sprints. State assumptions explicitly, identify what does not fit, and give a range rather than a single date.\nBacklog: [backlog].\nVelocity: [range].',
+  checks:['The backlog totals 76 points and two sprints deliver 40 to 52. Did the plan show what does not fit?','Did it give a range rather than a single date?','What would you tell the stakeholders?']}
+];
+
+var KEY = 'adc-navigator-v1';
+var storageOk = true;
+
+function blank(){ return {levels:null, targets:{}, history:[], log:[], practised:{}, sample:false}; }
+function load(){
+  try{
+    var r = localStorage.getItem(KEY);
+    if(r){ var s = JSON.parse(r); if(s && typeof s === 'object'){ return Object.assign(blank(), s); } }
+  }catch(e){ storageOk = false; }
+  return blank();
+}
+function persist(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ storageOk = false; }
+}
+
+var S = load();
+var view = 'dashboard';
+var cur = null;
+var confirmReset = false;
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function fmtDate(t){ return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function compById(id){ return COMPS.filter(function(c){return c.id===id;})[0]; }
+function totalLevels(levels){
+  var t = 0; COMPS.forEach(function(c){ t += (levels||S.levels)[c.id]; }); return t;
+}
+function targetOf(id){ return S.targets[id] || 3; }
+function totalTarget(){ var t = 0; COMPS.forEach(function(c){ t += targetOf(c.id); }); return t; }
+
+/* ---------- Recommendation rules ---------- */
+function pickExercise(compId){
+  var list = EX.filter(function(e){return e.comp===compId;});
+  var undone = list.filter(function(e){ return !S.log.some(function(l){return l.ex===e.id;}); })[0];
+  if(undone) return undone;
+  var best = list[0], bt = Infinity;
+  list.forEach(function(e){
+    var last = Math.max.apply(null, S.log.filter(function(l){return l.ex===e.id;}).map(function(l){return l.t;}));
+    if(last < bt){ bt = last; best = e; }
+  });
+  return best;
+}
+function recommend(){
+  if(!S.levels) return null;
+  var now = Date.now();
+  if(S.levels.resp < 2){
+    return {ex: pickExercise('resp'),
+      why:'Responsible AI use is below level 2. The programme asks you to reach level 2 there before practising the other competencies.'};
+  }
+  var open = COMPS.filter(function(c){ return S.levels[c.id] < targetOf(c.id); });
+  if(!open.length) return {done:true};
+  var fresh = open.filter(function(c){ return !(S.practised[c.id] && now - S.practised[c.id] < 7*DAY); });
+  var deferred = fresh.length && fresh.length < open.length;
+  var pool = fresh.length ? fresh : open;
+  pool.sort(function(a,b){ return S.levels[a.id]-S.levels[b.id] || COMPS.indexOf(a)-COMPS.indexOf(b); });
+  var c = pool[0];
+  var why = c.name + ' is your lowest-rated competency below target (level ' + S.levels[c.id] + ', target ' + targetOf(c.id) + ').';
+  if(deferred) why += ' Competencies practised in the last seven days were deferred.';
+  return {ex: pickExercise(c.id), why: why};
+}
+
+/* ---------- Projection ---------- */
+function projection(){
+  var h = S.history;
+  if(!S.levels) return {status:'none'};
+  var remaining = totalTarget() - totalLevels();
+  if(remaining <= 0) return {status:'reached'};
+  if(h.length < 3) return {status:'insufficient'};
+  var span = (h[h.length-1].t - h[0].t) / DAY;
+  if(span < 1) return {status:'insufficient'};
+  var t0 = h[0].t, n = h.length, mt = 0, my = 0, i;
+  for(i=0;i<n;i++){ mt += (h[i].t - t0)/DAY; my += h[i].total; }
+  mt /= n; my /= n;
+  var num = 0, den = 0;
+  for(i=0;i<n;i++){ var dt = (h[i].t - t0)/DAY - mt; num += dt*(h[i].total - my); den += dt*dt; }
+  if(den === 0) return {status:'insufficient'};
+  var slope = num/den;
+  if(slope <= 0.0001) return {status:'flat', slope:slope};
+  var days = remaining / slope;
+  return {status:'ok', slope:slope, days:days, date: Date.now() + days*DAY, remaining:remaining};
+}
+
+/* ---------- Views ---------- */
+function banners(){
+  var h = '';
+  if(!storageOk) h += '<div class="banner" role="status">Progress cannot be saved in this browser session. Your entries will be lost when you close the page.</div>';
+  if(S.sample) h += '<div class="banner" role="status">Sample data is loaded for demonstration. Reset all data on the About screen to begin with your own assessment.</div>';
+  return h;
+}
+
+function sparkline(){
+  var h = S.history;
+  if(h.length < 2) return '';
+  var W = 320, H = 90, pad = 24;
+  var t0 = h[0].t, t1 = h[h.length-1].t, span = Math.max(t1 - t0, 1);
+  var lo = 6, hi = 24;
+  function x(t){ return pad + (t - t0)/span * (W - pad*2); }
+  function y(v){ return H - 16 - (v - lo)/(hi - lo) * (H - 28); }
+  var pts = h.map(function(p){ return x(p.t).toFixed(1)+','+y(p.total).toFixed(1); }).join(' ');
+  var dots = h.map(function(p){ return '<circle cx="'+x(p.t).toFixed(1)+'" cy="'+y(p.total).toFixed(1)+'" r="3" fill="var(--accent)"/>'; }).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:360px" role="img" aria-label="Total capability score over time, from '+h[0].total+' to '+h[h.length-1].total+' out of 24">' +
+    '<line x1="'+pad+'" y1="'+(H-16)+'" x2="'+(W-pad)+'" y2="'+(H-16)+'" stroke="var(--line)"/>' +
+    '<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2"/>' + dots +
+    '<text x="'+pad+'" y="'+(H-3)+'">'+fmtDate(t0)+'</text><text x="'+(W-pad)+'" y="'+(H-3)+'" text-anchor="end">'+fmtDate(t1)+'</text></svg>';
+}
+
+function levelRow(c){
+  var l = S.levels[c.id], t = targetOf(c.id), seg = '';
+  for(var i=1;i<=4;i++) seg += '<span class="seg'+(i<=l?' on':'')+(i===t?' tgt':'')+'"></span>';
+  return '<div class="row"><div class="rname"><strong>'+esc(c.name)+'</strong><span class="muted small">Level '+l+': '+LEVELS[l-1]+' · target '+t+'</span></div>' +
+    '<div class="bar" role="img" aria-label="Level '+l+' of 4, target '+t+'">'+seg+'</div></div>';
+}
+
+function vDashboard(){
+  var h = banners();
+  if(!S.levels){
+    return h + '<div class="card"><h2>Start with a self-assessment</h2>' +
+      '<p>Rate yourself on six AI competencies relevant to delivery management. The app then recommends your next practice exercise and tracks your pace.</p>' +
+      '<p><button class="btn" data-act="nav" data-arg="assess">Begin self-assessment</button> ' +
+      '<button class="btn secondary" data-act="sample">Load sample data</button></p>' +
+      '<p class="muted small">Sample data is synthetic and lets you see the dashboard populated before committing your own entries.</p></div>';
+  }
+  var rec = recommend();
+  var recHtml;
+  if(rec.done){
+    recHtml = '<p>All current targets are reached. Raise your targets on the Assess screen to continue.</p>';
+  } else {
+    var c = compById(rec.ex.comp);
+    recHtml = '<p><span class="pill">'+esc(c.name)+'</span><span class="muted small">'+rec.ex.minutes+' minutes</span></p>' +
+      '<p><strong>'+esc(rec.ex.title)+'</strong></p><p class="muted small">'+esc(rec.why)+'</p>' +
+      '<p><button class="btn" data-act="start" data-arg="'+rec.ex.id+'">Start this exercise</button></p>';
+  }
+  var pr = projection(), prHtml;
+  var weekly = pr.slope !== undefined ? (pr.slope*7).toFixed(2) : '';
+  if(pr.status === 'reached') prHtml = '<p>All targets reached.</p>';
+  else if(pr.status === 'insufficient') prHtml = '<p>Insufficient data. A projection needs at least three progress entries recorded over at least two days.</p>';
+  else if(pr.status === 'flat') prHtml = '<p>No upward trend in your recorded progress yet, so no date can be projected.</p>';
+  else {
+    var when = pr.days > 365 ? 'more than a year away at the current pace' : 'approximately ' + fmtDate(pr.date);
+    prHtml = '<p>Targets reached: <strong>'+when+'</strong>.</p><p class="muted small">Current pace: '+weekly+' levels per week across all competencies; '+pr.remaining+' levels remaining.</p>';
+  }
+  return h + '<div class="grid2"><div class="card"><h2>Next recommended exercise</h2>'+recHtml+'</div>' +
+    '<div class="card"><h2>Projected pace</h2>'+prHtml+sparkline()+
+    '<p class="muted small">A straight-line extrapolation of your own recorded levels. Indicative only, not a forecast.</p></div></div>' +
+    '<div class="card"><h2>Your capability profile</h2>' + COMPS.map(levelRow).join('') +
+    '<p class="muted small">Filled segments show your level; the underlined segment marks your target. Total score: '+totalLevels()+' of 24.</p></div>';
+}
+
+function vAssess(){
+  var h = banners() + '<div class="card"><h2>Self-assessment</h2><p class="muted">Rate your current level for each competency and choose a target. You can revisit this at any time; each save is recorded as a progress entry.</p>';
+  COMPS.forEach(function(c){
+    var cl = S.levels ? S.levels[c.id] : 0;
+    h += '<fieldset><legend>'+esc(c.name)+'</legend><div class="muted small">'+esc(c.desc)+'</div>';
+    for(var i=1;i<=4;i++){
+      h += '<label class="opt"><input type="radio" name="lv-'+c.id+'" value="'+i+'"'+(cl===i?' checked':'')+'> <strong>'+i+'. '+LEVELS[i-1]+'</strong> <span class="muted small">'+LEVEL_DESC[i-1]+'</span></label>';
+    }
+    h += '<div style="margin-top:8px"><label>Target level <select id="tg-'+c.id+'">';
+    for(var t=2;t<=4;t++) h += '<option value="'+t+'"'+(targetOf(c.id)===t?' selected':'')+'>'+t+'. '+LEVELS[t-1]+'</option>';
+    h += '</select></label></div></fieldset>';
+  });
+  h += '<div class="msg" id="msg" role="alert"></div><button class="btn" data-act="saveAssess">Save assessment</button></div>';
+  return h;
+}
+
+function vPractice(){
+  var h = banners();
+  if(!S.levels) return h + '<div class="card"><h2>Assess first</h2><p>Complete the self-assessment so that the app can recommend exercises.</p><p><button class="btn" data-act="nav" data-arg="assess">Begin self-assessment</button></p></div>';
+  if(cur){
+    var ex = EX.filter(function(e){return e.id===cur;})[0], c = compById(ex.comp);
+    h += '<p><button class="btn secondary" data-act="back">Back to all exercises</button></p>' +
+      '<div class="card"><p><span class="pill">'+esc(c.name)+'</span><span class="muted small">'+ex.minutes+' minutes</span></p>' +
+      '<h2>'+esc(ex.title)+'</h2>' +
+      '<div class="banner" role="note">Use only the fictional scenario below. Do not paste confidential client or company information into any AI tool, and follow your organisation\'s AI policy.</div>' +
+      '<h3>Scenario</h3><p>'+esc(ex.scenario)+'</p>' +
+      '<h3>Your task</h3><p>'+esc(ex.task)+'</p>' +
+      '<h3>Prompt template</h3><pre id="tpl">'+esc(ex.template)+'</pre><button class="btn secondary" data-act="copyTpl">Copy template</button> <span class="muted small" id="copymsg" role="status"></span>' +
+      '<h3>Check the output</h3><ul class="clean">'+ex.checks.map(function(k){return '<li>'+esc(k)+'</li>';}).join('')+'</ul>' +
+      '<h3>Reflection</h3><label for="refl" class="small muted">What worked, what did not, and what would you do differently?</label>' +
+      '<textarea id="refl"></textarea>' +
+      '<p><label>Your level for this competency now <select id="newlevel">';
+    for(var i=1;i<=4;i++) h += '<option value="'+i+'"'+(S.levels[ex.comp]===i?' selected':'')+'>'+i+'. '+LEVELS[i-1]+'</option>';
+    h += '</select></label></p><div class="msg" id="msg" role="alert"></div><button class="btn" data-act="saveRefl">Save reflection</button></div>';
+    return h;
+  }
+  h += '<div class="card"><h2>All exercises</h2><p class="muted">Twelve short exercises, two per competency. The dashboard recommends an order, but you may choose any.</p>';
+  COMPS.forEach(function(c){
+    h += '<h3>'+esc(c.name)+'</h3>';
+    EX.filter(function(e){return e.comp===c.id;}).forEach(function(e){
+      var done = S.log.some(function(l){return l.ex===e.id;});
+      h += '<div class="row"><div class="rname"><strong>'+esc(e.title)+'</strong><span class="muted small">'+e.minutes+' minutes'+(done?' · completed':'')+'</span></div>' +
+        '<button class="btn secondary" data-act="start" data-arg="'+e.id+'">'+(done?'Repeat':'Open')+'</button></div>';
+    });
+  });
+  return h + '</div>';
+}
+
+function logText(){
+  var out = 'AI Capability Navigator - reflection log\nExported: ' + fmtDate(Date.now()) + '\n';
+  S.log.forEach(function(l){
+    var ex = EX.filter(function(e){return e.id===l.ex;})[0], c = compById(l.comp);
+    out += '\n' + fmtDate(l.t) + ' | ' + c.name + ' | ' + (ex?ex.title:l.ex) + ' | Level recorded: ' + l.level + '\n' + l.text + '\n';
+  });
+  return out;
+}
+function vLog(){
+  var h = banners() + '<div class="card"><h2>Reflection log</h2>';
+  if(!S.log.length) return h + '<p>No reflections recorded yet. Complete an exercise to add one.</p></div>';
+  S.log.slice().reverse().forEach(function(l){
+    var ex = EX.filter(function(e){return e.id===l.ex;})[0], c = compById(l.comp);
+    h += '<div class="logentry"><div><span class="pill">'+esc(c.name)+'</span><span class="muted small">'+fmtDate(l.t)+' · level recorded '+l.level+'</span></div>' +
+      '<strong>'+esc(ex?ex.title:l.ex)+'</strong><div>'+esc(l.text).replace(/\n/g,'<br>')+'</div></div>';
+  });
+  h += '</div><div class="card"><h2>Export</h2><p class="muted small">Copy the text below to share what you have learned, for example at a showcase.</p>' +
+    '<textarea id="exp" readonly>'+esc(logText())+'</textarea>' +
+    '<p><button class="btn secondary" data-act="copyLog">Copy log</button> <span class="muted small" id="copymsg" role="status"></span></p></div>';
+  return h;
+}
+
+function vAbout(){
+  var h = banners() + '<div class="card"><h2>About this tool</h2>' +
+    '<p>The navigator helps delivery managers build practical AI skills through short exercises on the artefacts they handle every day: status updates, risk registers, retrospectives, plans and metrics.</p>' +
+    '<h3>How recommendations are made</h3><ul class="clean">' +
+    '<li>Responsible AI use comes first: until it reaches level 2, that competency is recommended before any other.</li>' +
+    '<li>After that, the competency with the lowest level below its target is chosen.</li>' +
+    '<li>Competencies practised in the last seven days are deferred, unless that would leave nothing to recommend.</li>' +
+    '<li>Within a competency, an unfinished exercise is preferred; otherwise the one practised longest ago.</li></ul>' +
+    '<h3>How the projection works</h3><p>Each assessment or reflection records your total score. Once there are at least three entries over at least two days, a least-squares line through those totals estimates when your targets will be met. It is a simple extrapolation of your own self-rated progress, not a machine-learned prediction, and it is labelled as indicative.</p>' +
+    '<h3>Privacy and data</h3><p>Everything is stored in this browser only. The app makes no network requests and uses no accounts. Scenarios are fictional; never paste confidential material into AI tools.</p>' +
+    '<h3>Reset</h3>';
+  if(confirmReset){
+    h += '<p>This permanently deletes your assessment, progress and reflections from this browser.</p><button class="btn" data-act="resetYes">Confirm reset</button> <button class="btn secondary" data-act="resetNo">Cancel</button>';
+  } else {
+    h += '<button class="btn secondary" data-act="resetAsk">Reset all data</button>';
+  }
+  return h + '</div>';
+}
+
+var VIEWS = {dashboard:vDashboard, assess:vAssess, practice:vPractice, log:vLog, about:vAbout};
+var NAV = [['dashboard','Dashboard'],['assess','Assess'],['practice','Practice'],['log','Log'],['about','About']];
+
+function render(){
+  document.getElementById('nav').innerHTML = NAV.map(function(n){
+    return '<button data-act="nav" data-arg="'+n[0]+'"'+(view===n[0]?' aria-current="page"':'')+'>'+n[1]+'</button>';
+  }).join('');
+  document.getElementById('app').innerHTML = VIEWS[view]();
+}
+function go(v){ view = v; cur = null; confirmReset = false; render(); window.scrollTo(0,0); }
+function msg(t){ var m = document.getElementById('msg'); if(m) m.textContent = t; }
+
+/* ---------- Actions ---------- */
+function sampleData(){
+  var now = Date.now();
+  var s = blank();
+  s.sample = true;
+  s.levels = {prompt:2, resp:2, report:1, risk:1, retro:2, plan:1};
+  s.targets = {prompt:3, resp:3, report:3, risk:3, retro:3, plan:3};
+  [[-21,7],[-14,8],[-8,8],[-3,9],[0,9]].forEach(function(p){ s.history.push({t:now + p[0]*DAY, total:p[1]}); });
+  s.log.push({t:now-14*DAY, ex:'e1', comp:'prompt', level:2, text:'Sample entry: adding the audience and format changed the draft considerably. The first attempt invented a delivery date.'});
+  s.log.push({t:now-8*DAY, ex:'e3', comp:'resp', level:2, text:'Sample entry: removing the contract value was straightforward; removing the individual\'s role was harder than expected.'});
+  s.log.push({t:now-3*DAY, ex:'e9', comp:'retro', level:2, text:'Sample entry: the suggested format omitted any review of earlier actions, so I added a ten-minute segment for it.'});
+  s.practised = {prompt:now-14*DAY, resp:now-8*DAY, retro:now-3*DAY};
+  return s;
+}
+
+function act(a, arg){
+  switch(a){
+    case 'nav': go(arg); break;
+    case 'sample': S = sampleData(); persist(); go('dashboard'); break;
+    case 'start': cur = arg; view = 'practice'; render(); window.scrollTo(0,0); break;
+    case 'back': cur = null; render(); break;
+    case 'saveAssess': {
+      var lv = {}, tg = {}, missing = false;
+      COMPS.forEach(function(c){
+        var r = document.querySelector('input[name="lv-'+c.id+'"]:checked');
+        if(!r) missing = true; else lv[c.id] = parseInt(r.value,10);
+        tg[c.id] = parseInt(document.getElementById('tg-'+c.id).value,10);
+      });
+      if(missing){ msg('Please select a level for every competency.'); return; }
+      var changed = !S.levels || COMPS.some(function(c){ return S.levels[c.id] !== lv[c.id]; });
+      S.levels = lv; S.targets = tg;
+      if(changed || !S.history.length) S.history.push({t:Date.now(), total:totalLevels(lv)});
+      persist(); go('dashboard'); break;
+    }
+    case 'copyTpl': copyFrom('tpl'); break;
+    case 'copyLog': copyFrom('exp'); break;
+    case 'saveRefl': {
+      var ex = EX.filter(function(e){return e.id===cur;})[0];
+      var txt = document.getElementById('refl').value.trim();
+      if(txt.length < 10){ msg('Please record a reflection of at least a sentence.'); return; }
+      var now = Date.now(), nl = parseInt(document.getElementById('newlevel').value,10);
+      S.log.push({t:now, ex:ex.id, comp:ex.comp, level:nl, text:txt});
+      S.practised[ex.comp] = now; S.levels[ex.comp] = nl;
+      S.history.push({t:now, total:totalLevels()});
+      persist(); cur = null; go('dashboard'); break;
+    }
+    case 'resetAsk': confirmReset = true; render(); break;
+    case 'resetNo': confirmReset = false; render(); break;
+    case 'resetYes': S = blank(); persist(); go('dashboard'); break;
+  }
+}
+
+function copyFrom(id){
+  var el = document.getElementById(id), note = document.getElementById('copymsg');
+  var text = el.value !== undefined && el.tagName === 'TEXTAREA' ? el.value : el.textContent;
+  function fallback(){
+    try{ var r = document.createRange(); if(el.select){ el.select(); } else { r.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); } }catch(e){}
+    if(note) note.textContent = 'Automatic copy is unavailable here. The text is selected; press Ctrl+C or Cmd+C.';
+  }
+  try{
+    navigator.clipboard.writeText(text).then(function(){ if(note) note.textContent = 'Copied.'; }, fallback);
+  }catch(e){ fallback(); }
+}
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-act]');
+  if(b) act(b.getAttribute('data-act'), b.getAttribute('data-arg'));
+});
+
+render();
+
+window.__adc = {recommend:recommend, projection:projection, state:function(){return S;}, setState:function(s){S=s;}, EX:EX, COMPS:COMPS, act:act, render:render};
+})();
+</script>
+</body>
+</html>
