@@ -108,7 +108,7 @@ var EX = [
  {id:'e5', comp:'report', title:'Tailor one update to three audiences', minutes:20,
   scenario:'Project Kestrel (fictional): release 2 of 3 is delivered. A vendor API delay of 8 working days affects release 3. Budget is 4% under forecast. The team is at normal capacity.',
   task:'Produce three versions of one update: for an executive sponsor, for the delivery team and for a customer support lead.',
-  template:'Using only the facts below, write three versions of one update, for (1) an executive sponsor, (2) the delivery team, (3) a customer support lead. For each, state what that audience needs to decide or do.\nFacts: [facts].',
+  template:'Using only the facts below, write three versions of one update, for (1) an executive sponsor, (2) the delivery team, (3) a customer support lead. For each, state what that audience needs to decide or do.\nFacts: [copy the sample scenario, or use your own. If using your own, include one adverse item such as a delay, so you can test that this is addressed in each version. Any proposed actions for each audience will be inferred by your AI, so validate them against your own knowledge and expertise].',
   checks:['Is the vendor delay present and equally clear in all three versions?','Does each version say what the reader should do?','Which version would you change most before sending?']},
  {id:'e6', comp:'report', title:'Check for softened or inflated messages', minutes:15,
   scenario:'Use the same Project Kestrel facts: release 2 of 3 delivered; vendor API delay of 8 working days affecting release 3; budget 4% under forecast.',
@@ -259,6 +259,18 @@ function levelRow(c){
     '<div class="bar" role="img" aria-label="Level '+l+' of 4, target '+t+'">'+seg+'</div></div>';
 }
 
+function howItWorks(){
+  return '<div class="card"><h2>How each practice exercise works</h2>' +
+    '<p class="muted small">The navigator does not generate content itself. You draft in your own AI tool and use this app to structure the practice and record what you learn.</p>' +
+    '<ol>' +
+    '<li><strong>Copy the template.</strong> Open an exercise on the Practice screen and use "Copy template" to copy the prompt. Each exercise includes a sample scenario with fictional facts.</li>' +
+    '<li><strong>Draft in your AI tool.</strong> Paste the template and facts into an AI tool approved by your organisation. You may substitute comparable material from your own work where your AI policy permits.</li>' +
+    '<li><strong>Review the output manually.</strong> Work through the "Check the output" questions against what the AI produced. Edit or reject anything unsupported before you rely on it.</li>' +
+    '<li><strong>Record a reflection.</strong> Return to the exercise, note what worked, what did not and what you would do differently, and update your level for that competency. Save it to add a progress entry.</li>' +
+    '</ol>' +
+    '<p class="muted small">Reflections are stored in this browser only. Record what you learned about the technique, not confidential business detail.</p></div>';
+}
+
 function vDashboard(){
   var h = banners() + '<div class="note" role="note">By using this tool, compliance with your organisation\'s AI policy is assumed.</div>';
   if(!S.levels){
@@ -266,7 +278,7 @@ function vDashboard(){
       '<p>Rate yourself on five AI competencies relevant to delivery management. The app then recommends your next practice exercise and tracks your pace.</p>' +
       '<p><button class="btn" data-act="nav" data-arg="assess">Begin self-assessment</button> ' +
       '<button class="btn secondary" data-act="sample">Load sample data</button></p>' +
-      '<p class="muted small">Sample data is synthetic and lets you see the dashboard populated before committing your own entries.</p></div>';
+      '<p class="muted small">Sample data is synthetic and lets you see the dashboard populated before committing your own entries.</p></div>' + howItWorks();
   }
   var rec = recommend();
   var recHtml;
@@ -291,7 +303,7 @@ function vDashboard(){
     '<div class="card"><h2>Projected pace</h2>'+prHtml+sparkline()+
     '<p class="muted small">A straight-line extrapolation of your own recorded levels. Indicative only, not a forecast.</p></div></div>' +
     '<div class="card"><h2>Your capability profile</h2>' + COMPS.map(levelRow).join('') +
-    '<p class="muted small">Filled segments show your level; the underlined segment marks your target. Total score: '+totalLevels()+' of 20.</p></div>';
+    '<p class="muted small">Filled segments show your level; the underlined segment marks your target. Total score: '+totalLevels()+' of 20.</p></div>' + howItWorks();
 }
 
 function vAssess(){
